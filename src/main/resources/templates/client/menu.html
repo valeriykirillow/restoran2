@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head"></head>
+<body class="container mt-5">
+
+<h3 class="text-center mb-4">Меню</h3>
+
+<form action="/client/orders" method="post">
+    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+
+    <ul class="list-group">
+        <th:block th:each="item : ${menuItems}">
+            <li class="list-group-item d-flex align-items-center justify-content-between">
+                <!-- Название блюда и цена -->
+                <div class="d-flex justify-content-between w-100">
+                    <span th:text="${item.name}" class="flex-grow-1">Блюдо</span>
+                    <span th:text="${item.price} + ' ₽'" class="text-end ms-3" style="width: 80px;">0 ₽</span>
+                </div>
+                <!-- Ввод количества с отступом от цены -->
+                <input type="number" th:name="'itemQuantities[' + ${item.id} + ']'" value="0" min="0" class="form-control" style="width: 70px; margin-left: 20px;" />
+            </li>
+        </th:block>
+    </ul>
+
+    <div class="text-center mt-4">
+        <button type="submit" class="btn btn-primary">Сделать заказ</button>
+    </div>
+</form>
+
+</body>
+</html>

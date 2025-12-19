@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head"></head>
+<body>
+<div class="container mt-4">
+    <h2>Ваши заказы</h2>
+
+    <!-- Кнопка "Назад к меню" -->
+    <a href="/client/menu" class="btn btn-secondary mb-3">← Назад к меню</a>
+
+    <!-- Перебор заказов -->
+    <div th:each="order : ${orders}">
+        <!-- data-order-id используется для автообновления -->
+        <div class="card my-3" th:attr="data-order-id=${order.id}">
+            <div class="card-body">
+                <h5 class="card-title">Номер заказа: <span th:text="${order.id}"></span></h5>
+                <p>Статус: <span class="order-status" th:text="${order.status}"></span></p>
+
+                <!-- Отображение заказанных товаров -->
+                <ul class="mb-3">
+                    <li th:each="item : ${order.items}">
+                        <span th:text="${item.item.name}"></span> —
+                        <span th:text="${item.quantity}"></span> шт. —
+                        <span th:text="${item.item.price * item.quantity}"></span> ₽
+                    </li>
+                </ul>
+
+                <!-- Кнопка оплаты, если счет выставлен и не оплачен -->
+                <div th:if="${order.status.name() == 'COMPLETED'
+                             and order.invoice != null
+                             and order.invoice.status.name() == 'UNPAID'}">
+                    <form th:action="@{/client/pay/{orderId}(orderId=${order.id})}" method="post">
+                        <button type="submit" class="btn btn-success">Оплатить счёт</button>
+                    </form>
+                </div>
+
+                <!-- Если счёт уже оплачен -->
+                <div th:if="${order.invoice != null and order.invoice.status.name() == 'PAID'}" class="text-success mt-2">
+                    Счёт уже оплачен.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Скрипт для автообновления статуса -->
+<script>
+    function updateStatuses() {
+        document.querySelectorAll("[data-order-id]").forEach(card => {
+            const orderId = card.getAttribute("data-order-id");
+            fetch(`/client/order-status/${orderId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const statusElement = card.querySelector(".order-status");
+                    if (statusElement && statusElement.textContent !== data.status) {
+                        statusElement.textContent = data.status;
+                        location.reload(); // Обновляем страницу для показа кнопки оплаты
+                    }
+                })
+                .catch(err => console.error("Ошибка при обновлении статуса:", err));
+        });
+    }
+
+    setInterval(updateStatuses, 5000); // Каждые 5 секунд
+</script>
+</body>
+</html>
